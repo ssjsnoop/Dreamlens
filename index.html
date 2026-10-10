@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dreamlens: What Did Your Dream Mean?</title>
+<meta name="description" content="Type in a dream and get the most likely reading, based on dream research and interpretation traditions. Private, free, works offline.">
+<meta name="theme-color" content="#0b0d1f">
+<meta name="color-scheme" content="dark">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Dreamlens">
+<style>
+:root{
+  --bg:#0b0d1f; --bg2:#15163a;
+  --surface:rgba(255,255,255,.055); --surface2:rgba(255,255,255,.09);
+  --line:rgba(255,255,255,.12);
+  --text:#ecebff; --muted:#a9a8d0; --faint:#7d7cab;
+  --gold:#f2c97d; --gold-ink:#2a2110; --lav:#9d8cff; --teal:#6fd3c4; --rose:#ff9db5;
+  --radius:18px;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; min-height:100vh; color:var(--text); font:16px/1.6 var(--sans);
+  background:linear-gradient(180deg,var(--bg2) 0%,var(--bg) 55%,#070815 100%) fixed;
+  padding:env(safe-area-inset-top) 0 calc(78px + env(safe-area-inset-bottom));
+}
+.sky{position:fixed; inset:0; pointer-events:none; z-index:0;
+  background:
+    radial-gradient(1.5px 1.5px at 12% 18%,#fff,transparent 60%),
+    radial-gradient(1px 1px at 28% 62%,#dcd8ff,transparent 60%),
+    radial-gradient(1.5px 1.5px at 46% 12%,#fff,transparent 60%),
+    radial-gradient(1px 1px at 63% 38%,#ffe9bd,transparent 60%),
+    radial-gradient(1.5px 1.5px at 78% 74%,#fff,transparent 60%),
+    radial-gradient(1px 1px at 90% 20%,#dcd8ff,transparent 60%),
+    radial-gradient(1px 1px at 8% 84%,#fff,transparent 60%),
+    radial-gradient(1.5px 1.5px at 55% 90%,#dcd8ff,transparent 60%);
+  opacity:.75; animation:twinkle 7s ease-in-out infinite alternate;
+}
+@keyframes twinkle{from{opacity:.45}to{opacity:.9}}
+.wrap{position:relative; z-index:1; max-width:720px; margin:0 auto; padding:0 18px}
+header.top{display:flex; align-items:center; justify-content:space-between; padding:18px 0 6px}
+.brand{display:flex; align-items:center; gap:10px; font-family:var(--serif); font-size:22px; letter-spacing:.2px}
+.brand img{width:34px; height:34px; border-radius:9px}
+h1,h2,h3{font-family:var(--serif); font-weight:600; line-height:1.25; margin:0}
+h1{font-size:30px; margin:18px 0 8px}
+h2{font-size:22px}
+h3{font-size:17px; margin:22px 0 8px; color:var(--gold)}
+p{margin:0 0 12px}
+.lede{color:var(--muted); margin-bottom:18px}
+.sr{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
+textarea{
+  width:100%; min-height:170px; resize:vertical; padding:14px 15px; color:var(--text); font:16px/1.55 var(--sans);
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); outline:none;
+}
+textarea::placeholder{color:var(--faint)}
+textarea:focus,.btn:focus-visible,.chip:focus-visible,.tab:focus-visible,input:focus-visible,summary:focus-visible,.theme-card:focus-visible{outline:2px solid var(--lav); outline-offset:2px}
+.fieldlabel{margin:16px 0 8px; color:var(--muted); font-size:14px}
+.opt{color:var(--faint)}
+.chips{display:flex; flex-wrap:wrap; gap:8px}
+.chip{
+  font:inherit; font-size:14px; color:var(--text); background:var(--surface); border:1px solid var(--line);
+  border-radius:999px; padding:6px 13px; cursor:pointer; min-height:36px;
+}
+.chip[aria-pressed="true"]{background:rgba(157,140,255,.22); border-color:var(--lav); color:#fff}
+.chip.static{cursor:default; background:rgba(242,201,125,.1); border-color:rgba(242,201,125,.35); color:var(--gold)}
+.check{display:flex; align-items:center; gap:10px; margin:16px 0 4px; color:var(--muted); font-size:15px; cursor:pointer}
+.check input{width:20px; height:20px; accent-color:var(--lav)}
+.row{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px}
+.btn{
+  font:inherit; font-weight:600; border-radius:999px; padding:12px 22px; cursor:pointer; min-height:46px;
+  border:1px solid var(--line); background:var(--surface2); color:var(--text);
+}
+.btn.primary{background:linear-gradient(180deg,#f7d78f,#e9b95e); color:var(--gold-ink); border-color:transparent}
+.btn.ghost{background:transparent}
+.btn.small{padding:7px 14px; min-height:36px; font-size:14px}
+.btn[disabled]{opacity:.6; cursor:default}
+.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:20px; margin-top:22px; backdrop-filter:blur(6px)}
+.result{animation:rise .45s ease both}
+@keyframes rise{from{opacity:0; transform:translateY(10px)}to{opacity:1; transform:none}}
+.glyph{font-size:46px; line-height:1; margin-bottom:6px}
+.kicker{color:var(--gold); font-size:13px; letter-spacing:.09em; text-transform:uppercase; margin-bottom:6px}
+.headline{font-size:23px; margin-bottom:14px}
+.meter{display:flex; align-items:center; gap:8px; color:var(--muted); font-size:14px; margin-bottom:4px}
+.pips{display:inline-flex; gap:4px}
+.pip{width:22px; height:6px; border-radius:3px; background:rgba(255,255,255,.15)}
+.pip.on{background:var(--gold)}
+.fine{color:var(--faint); font-size:13px}
+.picked{color:var(--muted); font-size:14px; margin:12px 0}
+.picked b{color:var(--text); font-weight:600}
+.also{margin-top:6px}
+.also-item{display:flex; gap:12px; padding:11px 0; border-top:1px solid var(--line)}
+.also-item .g{font-size:26px}
+.also-item p{margin:2px 0 0; color:var(--muted); font-size:15px}
+.note{border-left:3px solid var(--teal); background:rgba(111,211,196,.08); padding:10px 14px; border-radius:0 12px 12px 0; margin:12px 0; font-size:15px}
+.care{border:1px solid rgba(255,157,181,.5); background:rgba(255,157,181,.09); border-radius:var(--radius); padding:16px 18px; margin-top:22px}
+.care a{color:var(--gold)}
+details{border-top:1px solid var(--line); padding:10px 0}
+details:last-of-type{border-bottom:1px solid var(--line)}
+summary{cursor:pointer; font-weight:600; list-style-position:inside; padding:4px 0}
+details p{margin:6px 0 4px; color:var(--muted); font-size:15px}
+ul.ask{margin:6px 0 0; padding-left:20px}
+ul.ask li{margin:6px 0}
+.actions{display:flex; flex-wrap:wrap; gap:10px; margin-top:20px}
+.view{display:none}
+.view.active{display:block}
+nav.tabs{
+  position:fixed; left:0; right:0; bottom:0; z-index:5; display:flex; justify-content:center;
+  padding:8px 12px calc(8px + env(safe-area-inset-bottom)); background:rgba(11,13,31,.88); backdrop-filter:blur(12px); border-top:1px solid var(--line);
+}
+nav.tabs .in{display:flex; width:100%; max-width:720px; gap:6px}
+.tab{flex:1; font:inherit; font-size:13px; color:var(--muted); background:transparent; border:0; border-radius:14px; padding:7px 4px; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:2px; min-height:54px}
+.tab span.i{font-size:21px; line-height:1}
+.tab[aria-selected="true"]{color:var(--gold); background:rgba(242,201,125,.1)}
+.entry{padding:16px 18px}
+.entry-head{display:flex; justify-content:space-between; gap:10px; align-items:baseline; color:var(--muted); font-size:13px}
+.snip{margin:8px 0 12px; color:var(--text)}
+.entry .actions{margin-top:6px}
+.inline-reading{margin-top:14px; padding-top:6px; border-top:1px solid var(--line)}
+.grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:10px; margin-top:16px}
+.theme-card{font:inherit; text-align:left; color:var(--text); background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:14px; cursor:pointer; min-height:92px}
+.theme-card .g{font-size:28px; display:block; margin-bottom:6px}
+.theme-card .n{font-size:14px; line-height:1.3}
+input[type=search]{width:100%; font:16px var(--sans); color:var(--text); background:var(--surface); border:1px solid var(--line); border-radius:999px; padding:11px 16px; margin-top:6px}
+dialog{width:min(92vw,640px); max-height:86vh; overflow:auto; color:var(--text); background:#14153a; border:1px solid var(--line); border-radius:22px; padding:22px 22px 18px}
+dialog::backdrop{background:rgba(5,6,18,.72)}
+.empty{text-align:center; color:var(--muted); padding:34px 10px}
+.empty .big{font-size:42px}
+.about{margin-top:26px}
+.hint{color:var(--muted); font-size:14px; margin-top:10px}
+footer.legal{color:var(--faint); font-size:12.5px; text-align:center; margin:30px 0 8px}
+@media (prefers-reduced-motion:reduce){.sky,.result{animation:none}}
+</style>
+</head>
+<body>
+<div class="sky" aria-hidden="true"></div>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><img src="icons/icon-192.png" alt="" width="34" height="34"><span>Dreamlens</span></div>
+    <button id="installBtn" class="btn small" type="button" hidden>Install app</button>
+  </header>
+
+  <main>
+    <!-- DECODE -->
+    <section id="view-decode" class="view active" aria-labelledby="h-decode">
+      <h1 id="h-decode" tabindex="-1">What did you dream?</h1>
+      <p class="lede">Type it in your own words, as messy as it was. The more you say about who was there, where you were and how it felt, the sharper the reading.</p>
+
+      <form id="dreamForm" autocomplete="off">
+        <label for="dreamText" class="sr">Describe your dream</label>
+        <textarea id="dreamText" placeholder="Last night I was in my old school, but the hallways kept changing. I had a test I hadn't studied for and I couldn't find my classroom..." spellcheck="true"></textarea>
+
+        <div class="fieldlabel" id="feelLabel">How did it feel? <span class="opt">(optional, tap any)</span></div>
+        <div class="chips" id="feelChips" role="group" aria-labelledby="feelLabel">
+          <button type="button" class="chip" data-feel="scared" aria-pressed="false">Scared</button>
+          <button type="button" class="chip" data-feel="sad" aria-pressed="false">Sad</button>
+          <button type="button" class="chip" data-feel="happy" aria-pressed="false">Happy</button>
+          <button type="button" class="chip" data-feel="calm" aria-pressed="false">Calm</button>
+          <button type="button" class="chip" data-feel="angry" aria-pressed="false">Angry</button>
+          <button type="button" class="chip" data-feel="embarrassed" aria-pressed="false">Embarrassed</button>
+          <button type="button" class="chip" data-feel="guilty" aria-pressed="false">Guilty</button>
+          <button type="button" class="chip" data-feel="confused" aria-pressed="false">Confused</button>
+          <button type="button" class="chip" data-feel="awed" aria-pressed="false">In awe</button>
+          <button type="button" class="chip" data-feel="helpless" aria-pressed="false">Helpless</button>
+        </div>
+
+        <label class="check"><input type="checkbox" id="recurring"> I've had this dream before</label>
+
+        <div class="row">
+          <button class="btn primary" type="submit">Read my dream</button>
+          <button class="btn ghost" type="button" id="exampleBtn">Try an example</button>
+        </div>
+      </form>
+
+      <div id="result" aria-live="polite"></div>
+
+      <details class="about card" style="padding:14px 18px">
+        <summary>How does this work, and how far can I trust it?</summary>
+        <p>Dreamlens matches the words and feelings in your dream against patterns that dream researchers have documented and interpretation traditions have described: Hall and Van de Castle's content studies, the continuity hypothesis (dreams mostly mirror waking concerns), threat-simulation research, and Jungian and folk symbolism.</p>
+        <p>Be honest with yourself about what that means. Nobody can know what a dream "really" meant. Symbol meanings are traditions, not proven facts, and studies show people tend to over-read dreams that match what they already fear or hope. Treat a reading as a good question to ask yourself, not a verdict.</p>
+        <p>Everything runs on your device. Your dreams are never uploaded anywhere. This is for reflection and entertainment, not medical or mental health advice.</p>
+        <p id="iosHint" class="hint" hidden>To install on iPhone: tap the Share button, then "Add to Home Screen".</p>
+      </details>
+    </section>
+
+    <!-- JOURNAL -->
+    <section id="view-journal" class="view" aria-labelledby="h-journal">
+      <h1 id="h-journal" tabindex="-1">Dream journal</h1>
+      <p class="lede">Saved on this device only. Patterns across several dreams are often more revealing than any single one.</p>
+      <div id="insights"></div>
+      <div id="journalList"></div>
+      <div class="row" id="journalTools" hidden>
+        <button class="btn small" type="button" id="copyBtn">Copy journal</button>
+        <button class="btn small" type="button" id="downloadBtn">Download .txt</button>
+        <button class="btn small ghost" type="button" id="clearBtn">Delete all</button>
+      </div>
+      <p class="fine" id="storageWarn" hidden>Heads up: this browser isn't allowing storage (private mode?), so entries will be lost when you close the app.</p>
+    </section>
+
+    <!-- LIBRARY -->
+    <section id="view-library" class="view" aria-labelledby="h-library">
+      <h1 id="h-library" tabindex="-1">Common dreams</h1>
+      <p class="lede">Browse the dream themes Dreamlens recognizes, and what each most often means.</p>
+      <label for="libSearch" class="sr">Search dream themes</label>
+      <input type="search" id="libSearch" placeholder="Search: falling, teeth, water...">
+      <div class="grid" id="libGrid"></div>
+    </section>
+
+    <footer class="legal">For reflection and entertainment, not medical advice. Your dreams stay on your device.</footer>
+  </main>
+</div>
+
+<nav class="tabs" aria-label="Main">
+  <div class="in" role="tablist">
+    <button class="tab" role="tab" data-view="decode" aria-selected="true"><span class="i">🌙</span>Decode</button>
+    <button class="tab" role="tab" data-view="journal" aria-selected="false"><span class="i">📓</span>Journal</button>
+    <button class="tab" role="tab" data-view="library" aria-selected="false"><span class="i">🔎</span>Library</button>
+  </div>
+</nav>
+
+<dialog id="sheet" aria-label="Dream theme">
+  <div id="sheetBody"></div>
+  <div class="actions"><button class="btn" type="button" id="sheetClose">Close</button></div>
+</dialog>
+
+<script src="engine.js"></script>
+<script>
+(function () {
+  'use strict';
+  var E = window.DreamEngine;
+  function $(s, r) { return (r || document).querySelector(s); }
+  function $$(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+  /* ---------- storage (works even if localStorage is blocked) ---------- */
+  var KEY_J = 'dreamlens.journal.v1', KEY_D = 'dreamlens.draft.v1';
+  var storageOK = true;
+  function lsGet(k, fb) { try { var v = localStorage.getItem(k); return v == null ? fb : JSON.parse(v); } catch (e) { storageOK = false; return fb; } }
+  function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { storageOK = false; return false; } }
+  var journal = lsGet(KEY_J, []);
+  if (!Array.isArray(journal)) journal = [];
+  function persist() { lsSet(KEY_J, journal); $('#storageWarn').hidden = storageOK; }
+
+  var THEME_LIST = E.listThemes();
+  function themeById(id) { for (var i = 0; i < THEME_LIST.length; i++) if (THEME_LIST[i].id === id) return THEME_LIST[i]; return null; }
+
+  /* ---------- tabs ---------- */
+  function show(view) {
+    $$('.view').forEach(function (v) { v.classList.toggle('active', v.id === 'view-' + view); });
+    $$('.tab').forEach(function (t) { t.setAttribute('aria-selected', t.dataset.view === view ? 'true' : 'false'); });
+    if (view === 'journal') renderJournal();
+    window.scrollTo(0, 0);
+    var h = $('#h-' + view); if (h) h.focus({ preventScroll: true });
+  }
+  $$('.tab').forEach(function (t) { t.addEventListener('click', function () { show(t.dataset.view); }); });
+
+  /* ---------- reading renderer ---------- */
+  function pips(level) {
+    var n = level === 'strong' ? 3 : level === 'good' ? 2 : level === 'loose' ? 1 : 0;
+    var s = '<span class="pips" aria-hidden="true">';
+    for (var i = 0; i < 3; i++) s += '<span class="pip' + (i < n ? ' on' : '') + '"></span>';
+    return s + '</span>';
+  }
+  function reading(res, ctx) {
+    ctx = ctx || {};
+    var h = '';
+    if (res.safety) {
+      h += '<div class="care" role="note"><strong>First, a quick check-in.</strong><p style="margin:6px 0 0">If any of this is about how you have actually been feeling, you deserve real support. In the US you can call or text <a href="tel:988">988</a> any time. Elsewhere, <a href="https://findahelpline.com" target="_blank" rel="noopener">findahelpline.com</a> lists local lines. You do not need to be at a breaking point to reach out.</p></div>';
+    }
+    var primary = res.primary;
+    h += '<article class="card result">';
+    h += '<div class="glyph" aria-hidden="true">' + (primary ? primary.glyph : (ctx.glyph || '🌙')) + '</div>';
+    h += '<div class="kicker">' + (ctx.library ? 'Common meaning' : 'Most likely reading') + (primary ? ' · ' + esc(primary.name) : (ctx.title ? ' · ' + esc(ctx.title) : '')) + '</div>';
+    h += '<h2 class="headline">' + esc(res.headline) + '</h2>';
+    if (res.confidence) {
+      h += '<div class="meter">' + pips(res.fallback ? 'none' : res.confidence.level) + '<strong>' + esc(res.confidence.label) + '</strong></div>';
+      h += '<p class="fine">' + esc(res.confidence.note) + '</p>';
+    }
+    if (res.emotions && res.emotions.length) {
+      h += '<div class="chips" style="margin:12px 0 4px" aria-label="Feelings detected">' + res.emotions.map(function (e) { return '<span class="chip static">' + esc(e.label) + '</span>'; }).join('') + '</div>';
+    }
+    if (primary && primary.evidence && primary.evidence.length) {
+      h += '<p class="picked">Picked up on: ' + primary.evidence.map(function (x) { return '<b>' + esc(x) + '</b>'; }).join(', ') + '</p>';
+    }
+    h += '<div style="margin-top:12px">' + res.paragraphs.map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('') + '</div>';
+
+    if (res.secondary && res.secondary.length) {
+      h += '<h3>Also in your dream</h3><div class="also">' + res.secondary.map(function (s) {
+        return '<div class="also-item"><div class="g" aria-hidden="true">' + s.glyph + '</div><div><strong>' + esc(s.name) + '</strong><p>' + esc(s.core) + '</p></div></div>';
+      }).join('') + '</div>';
+    }
+    (res.notes || []).forEach(function (n) { h += '<div class="note">' + esc(n.text) + '</div>'; });
+
+    if (res.lenses) {
+      h += '<h3>Other ways to read it</h3>';
+      h += '<details><summary>Jungian view</summary><p>' + esc(res.lenses.jung) + '</p></details>';
+      h += '<details><summary>Traditional dream-dictionary view</summary><p>' + esc(res.lenses.folk) + '</p></details>';
+      h += '<details><summary>What the science says</summary><p>' + esc(res.lenses.science) + '</p></details>';
+    }
+    if (res.ask && res.ask.length) {
+      h += '<h3>Ask yourself</h3><ul class="ask">' + res.ask.map(function (q) { return '<li>' + esc(q) + '</li>'; }).join('') + '</ul>';
+    }
+    if (ctx.actions) {
+      h += '<div class="actions"><button class="btn primary" type="button" id="saveBtn">Save to journal</button><button class="btn ghost" type="button" id="newBtn">New dream</button></div>';
+    }
+    h += '<p class="fine" style="margin-top:16px">A reading is a prompt for reflection, not a fact. No one can know what a dream really meant.</p>';
+    h += '</article>';
+    return h;
+  }
+
+  /* ---------- decode ---------- */
+  var current = null;
+  var form = $('#dreamForm'), ta = $('#dreamText'), resBox = $('#result');
+  function selectedFeel() { return $$('#feelChips .chip[aria-pressed="true"]').map(function (c) { return c.dataset.feel; }); }
+  $$('#feelChips .chip').forEach(function (c) {
+    c.addEventListener('click', function () { c.setAttribute('aria-pressed', c.getAttribute('aria-pressed') === 'true' ? 'false' : 'true'); });
+  });
+  ta.value = lsGet(KEY_D, '') || '';
+  ta.addEventListener('input', function () { lsSet(KEY_D, ta.value); });
+
+  form.addEventListener('submit', function (ev) {
+    ev.preventDefault();
+    var text = ta.value.trim();
+    var opts = { feel: selectedFeel(), recurring: $('#recurring').checked };
+    var res = E.analyze(text, opts);
+    if (!res.ok) {
+      resBox.innerHTML = '<div class="card result"><p style="margin:0">Add a little more, even a sentence or two. Who was there, where were you, what happened, how did it feel?</p></div>';
+      ta.focus();
+      return;
+    }
+    current = { text: text, feel: opts.feel, recurring: opts.recurring, res: res, saved: false };
+    resBox.innerHTML = reading(res, { actions: true });
+    bindResultActions();
+    var card = $('.result', resBox);
+    if (card) card.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  });
+
+  function bindResultActions() {
+    var save = $('#saveBtn'), nw = $('#newBtn');
+    if (save) save.addEventListener('click', function () {
+      if (!current || current.saved) return;
+      journal.push({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        ts: Date.now(), text: current.text, feel: current.feel, recurring: current.recurring,
+        themeId: current.res.primary ? current.res.primary.id : null
+      });
+      persist();
+      current.saved = true;
+      save.textContent = 'Saved ✓';
+      save.disabled = true;
+      lsSet(KEY_D, '');
+    });
+    if (nw) nw.addEventListener('click', function () {
+      ta.value = ''; lsSet(KEY_D, '');
+      $$('#feelChips .chip').forEach(function (c) { c.setAttribute('aria-pressed', 'false'); });
+      $('#recurring').checked = false;
+      resBox.innerHTML = '';
+      current = null;
+      window.scrollTo(0, 0); ta.focus();
+    });
+  }
+
+  var EXAMPLES = [
+    "I was back in my high school but the hallways kept changing. I had a final exam that I hadn't studied for and I couldn't find the classroom. Everyone else seemed to know what they were doing. I woke up with my heart racing.",
+    "I was driving down a mountain road and the brakes stopped working. My dad was in the passenger seat telling me to stay calm. I could see the cliff coming up and I woke up right before the car went over.",
+    "My grandmother, who passed away two years ago, was sitting in her old kitchen making soup. She smiled at me and told me everything would be okay. I felt so peaceful and didn't want to wake up.",
+    "I was flying over my town at night. Everything below was lit up and tiny. I wasn't scared at all, I felt free and a little proud that I could do it.",
+    "I was being chased through a dark parking garage by someone I couldn't see. I kept trying to run but my legs felt like they were stuck in mud. I woke up terrified."
+  ];
+  var exIdx = -1;
+  $('#exampleBtn').addEventListener('click', function () {
+    exIdx = (exIdx + 1) % EXAMPLES.length;
+    ta.value = EXAMPLES[exIdx]; lsSet(KEY_D, ta.value);
+    ta.focus();
+  });
+
+  /* ---------- journal ---------- */
+  function fmtDate(ts) { try { return new Date(ts).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }); } catch (e) { return ''; } }
+  function renderJournal() {
+    var list = $('#journalList'), ins = $('#insights'), tools = $('#journalTools');
+    $('#storageWarn').hidden = storageOK;
+    if (!journal.length) {
+      list.innerHTML = '<div class="empty"><div class="big" aria-hidden="true">📓</div><p>No dreams saved yet.<br>Decode a dream, then tap "Save to journal".</p></div>';
+      ins.innerHTML = ''; tools.hidden = true; return;
+    }
+    tools.hidden = false;
+    if (journal.length >= 3) {
+      var counts = {};
+      journal.forEach(function (e) { if (e.themeId) counts[e.themeId] = (counts[e.themeId] || 0) + 1; });
+      var top = Object.keys(counts).sort(function (a, b) { return counts[b] - counts[a]; }).slice(0, 3);
+      if (top.length) {
+        ins.innerHTML = '<div class="card" style="margin-top:6px"><strong>Your most frequent themes</strong><div class="chips" style="margin-top:10px">' +
+          top.map(function (id) { var t = themeById(id); return '<span class="chip static">' + t.glyph + ' ' + esc(t.name) + ' ×' + counts[id] + '</span>'; }).join('') +
+          '</div><p class="fine" style="margin-top:10px">Themes that repeat tend to track what is on your mind. Notice what is going on in your life when they show up.</p></div>';
+      } else ins.innerHTML = '';
+    } else ins.innerHTML = '';
+    list.innerHTML = journal.slice().sort(function (a, b) { return b.ts - a.ts; }).map(function (e) {
+      var t = e.themeId ? themeById(e.themeId) : null;
+      var snip = e.text.length > 150 ? e.text.slice(0, 150).trim() + '…' : e.text;
+      return '<article class="card entry" data-id="' + esc(e.id) + '"><div class="entry-head"><span>' + esc(fmtDate(e.ts)) + '</span><span>' + (t ? t.glyph + ' ' + esc(t.name) : 'No clear theme') + '</span></div>' +
+        '<p class="snip">' + esc(snip) + '</p><div class="actions"><button class="btn small" type="button" data-act="open" aria-expanded="false">Open reading</button><button class="btn small ghost" type="button" data-act="del">Delete</button></div>' +
+        '<div class="inline-reading" hidden></div></article>';
+    }).join('');
+  }
+  $('#journalList').addEventListener('click', function (ev) {
+    var b = ev.target.closest('button[data-act]'); if (!b) return;
+    var card = b.closest('.entry'); var id = card.dataset.id;
+    var entry = journal.filter(function (x) { return x.id === id; })[0]; if (!entry) return;
+    if (b.dataset.act === 'del') {
+      if (confirm('Delete this dream from your journal?')) { journal = journal.filter(function (x) { return x.id !== id; }); persist(); renderJournal(); }
+    } else {
+      var box = $('.inline-reading', card);
+      var open = box.hidden;
+      if (open) { box.innerHTML = reading(E.analyze(entry.text, { feel: entry.feel, recurring: entry.recurring })).replace('class="card result"', 'class="result" style="margin:0;padding:0;border:0;background:none"'); }
+      box.hidden = !open;
+      b.setAttribute('aria-expanded', open ? 'true' : 'false');
+      b.textContent = open ? 'Hide reading' : 'Open reading';
+    }
+  });
+  function journalText() {
+    return journal.slice().sort(function (a, b) { return a.ts - b.ts; }).map(function (e) {
+      var t = e.themeId ? themeById(e.themeId) : null;
+      return fmtDate(e.ts) + (t ? ' [' + t.name + ']' : '') + '\n' + e.text + '\n';
+    }).join('\n');
+  }
+  $('#copyBtn').addEventListener('click', function () {
+    var btn = this, txt = journalText();
+    function done(ok) { btn.textContent = ok ? 'Copied ✓' : 'Copy failed'; setTimeout(function () { btn.textContent = 'Copy journal'; }, 1800); }
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(function () { done(true); }, function () { done(false); });
+    else done(false);
+  });
+  $('#downloadBtn').addEventListener('click', function () {
+    try {
+      var url = URL.createObjectURL(new Blob([journalText()], { type: 'text/plain' }));
+      var a = document.createElement('a'); a.href = url; a.download = 'dreamlens-journal.txt';
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    } catch (e) { alert('Download is not available here. Try "Copy journal" instead.'); }
+  });
+  $('#clearBtn').addEventListener('click', function () {
+    if (confirm('Delete every dream in your journal? This cannot be undone.')) { journal = []; persist(); renderJournal(); }
+  });
+
+  /* ---------- library ---------- */
+  function renderLib(q) {
+    q = (q || '').toLowerCase().trim();
+    var items = THEME_LIST.filter(function (t) { return !q || t.name.toLowerCase().indexOf(q) !== -1 || t.core.toLowerCase().indexOf(q) !== -1; });
+    $('#libGrid').innerHTML = items.length ? items.map(function (t) {
+      return '<button type="button" class="theme-card" data-id="' + esc(t.id) + '"><span class="g" aria-hidden="true">' + t.glyph + '</span><span class="n">' + esc(t.name) + '</span></button>';
+    }).join('') : '<p class="fine">Nothing matches. Try a simpler word.</p>';
+  }
+  renderLib('');
+  $('#libSearch').addEventListener('input', function () { renderLib(this.value); });
+  var sheet = $('#sheet');
+  $('#libGrid').addEventListener('click', function (ev) {
+    var b = ev.target.closest('.theme-card'); if (!b) return;
+    var d = E.libraryEntry(b.dataset.id); if (!d) return;
+    var html = reading({ headline: d.headline, paragraphs: d.paragraphs, lenses: d.lenses, ask: d.ask, notes: [] }, { library: true, title: d.name, glyph: d.glyph });
+    $('#sheetBody').innerHTML = html.replace('class="card result"', 'class="result" style="margin:0;padding:0;border:0;background:none"');
+    if (sheet.showModal) sheet.showModal(); else sheet.setAttribute('open', '');
+    sheet.scrollTop = 0;
+  });
+  $('#sheetClose').addEventListener('click', function () { if (sheet.close) sheet.close(); else sheet.removeAttribute('open'); });
+  sheet.addEventListener('click', function (ev) { if (ev.target === sheet && sheet.close) sheet.close(); });
+
+  /* ---------- install + service worker ---------- */
+  var deferred = null, installBtn = $('#installBtn');
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); deferred = e; installBtn.hidden = false; });
+  installBtn.addEventListener('click', function () {
+    if (!deferred) return;
+    deferred.prompt();
+    deferred.userChoice.then(function () { deferred = null; installBtn.hidden = true; });
+  });
+  window.addEventListener('appinstalled', function () { installBtn.hidden = true; });
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) && !window.MSStream;
+  var standalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+  if (isIOS && !standalone) $('#iosHint').hidden = false;
+
+  if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+    window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+  }
+})();
+</script>
+</body>
+</html>
